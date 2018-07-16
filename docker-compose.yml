@@ -2,20 +2,19 @@ version: '3'
 services:
   elasticsearch:
     build: ./es
-    container_name: "qass-elasticsearch"
+    container_name: "qass-es"
     environment:
-      - cluster.name=kibana-cluster
-      - node.name=kibana-01
-      - bootstrap.memory_lock=true
-      - xpack.security.enabled=false
-      - xpack.monitoring.enabled=true
-      - xpack.watcher.enabled=false
-      - xpack.graph.enabled=false
-      - xpack.monitoring.history.duration=1d
-      - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
+      - "discovery.type=single-node"
+      - "http.host=0.0.0.0"
+      - "transport.host=127.0.0.1"
+      - "xpack.security.enabled=false"
+      - "xpack.monitoring.enabled=false"
+      - "xpack.watcher.enabled=false"
+      - "xpack.graph.enabled=false"
+      - "xpack.ml.enabled=false"
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
     volumes:
       - es-data:/usr/share/elasticsearch/data
-      # - ./es/config:/usr/share/elasticsearch/config
     ports:
       - 9200:9200
     expose:
@@ -28,19 +27,15 @@ services:
       qass_analytics_net:
         ipv4_address: 172.16.238.10
     tty: true
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "10"
 
   kibana:
     build: ./kibana
     container_name: "qass-kibana"
     environment:
-      ELASTICSEARCH_URL: "http://elasticsearch:9200"
-      XPACK_MONITORING_ELASTICSEARCH_URL: "http://elasticsearch:9200"
-      XPACK_SECURITY_ENABLED: "false"
+      - "ELASTICSEARCH_URL=http://elasticsearch:9200"
+      - "xpack.graph.enabled=false"
+      - "xpack.security.enabled=false"
+      - "xpack.ml.enabled=false"
     depends_on:
       - elasticsearch
     ports:
@@ -49,11 +44,6 @@ services:
       qass_analytics_net:
         ipv4_address: 172.16.238.11
     tty: true
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "10"
 
 networks:
   qass_analytics_net:
