@@ -4,22 +4,17 @@ services:
     build: ./es
     container_name: "qass-es"
     environment:
-      - "discovery.type=single-node"
-      - "http.host=0.0.0.0"
-      - "transport.host=127.0.0.1"
-      - "xpack.security.enabled=false"
-      - "xpack.monitoring.enabled=false"
-      - "xpack.watcher.enabled=false"
-      - "xpack.graph.enabled=false"
-      - "xpack.ml.enabled=false"
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
     volumes:
       - es-data:/usr/share/elasticsearch/data
     ports:
       - 9200:9200
-    expose:
-      - 9300
+      - 9300:9300
     ulimits:
+      memlock:
+        soft: -1
+        hard: -1
       nofile:
         soft: 65536
         hard: 65536
@@ -28,21 +23,31 @@ services:
         ipv4_address: 172.16.238.10
     tty: true
 
+  logstash:
+    build: ./logstash
+    container_name: "qass-logstash"
+    volumes:
+      - ./logstash/pipeline:/usr/share/logstash/pipeline
+      - ./logstash/log:/var/log
+    depends_on:
+      - elasticsearch
+    networks:
+      qass_analytics_net:
+        ipv4_address: 172.16.238.11
+    tty: true
+
   kibana:
     build: ./kibana
     container_name: "qass-kibana"
     environment:
-      - "ELASTICSEARCH_URL=http://elasticsearch:9200"
-      - "xpack.graph.enabled=false"
-      - "xpack.security.enabled=false"
-      - "xpack.ml.enabled=false"
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
     depends_on:
       - elasticsearch
     ports:
       - 5601:5601
     networks:
       qass_analytics_net:
-        ipv4_address: 172.16.238.11
+        ipv4_address: 172.16.238.12
     tty: true
 
 networks:
